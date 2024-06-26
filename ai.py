@@ -1,17 +1,8 @@
 import streamlit as st
 import fitz  # PyMuPDF
-from transformers import pipeline
-from nltk.tokenize.punkt import PunktSentenceTokenizer, PunktTrainer
 import layoutparser as lp
 import pytesseract
-
-# Directly include the punkt data
-punkt_data = """
-<...>  # Paste the content of the punkt data file here
-"""
-
-# Initialize the tokenizer
-tokenizer = PunktSentenceTokenizer(punkt_data)
+import numpy as np
 
 # Function to extract text and headings from a range of pages in a PDF file using layoutparser
 def extract_text_and_headings_from_pdf(doc, start_page, end_page):
@@ -39,31 +30,8 @@ def extract_text_and_headings_from_pdf(doc, start_page, end_page):
     
     return text, headings
 
-# Load the summarization model
-@st.cache_resource
-def load_summarizer():
-    return pipeline("summarization")
-
-# Function to summarize text
-def summarize_text(text, summarizer, max_chunk_size=1000):
-    sentences = tokenizer.tokenize(text)
-    chunks = []
-    current_chunk = ""
-
-    for sentence in sentences:
-        if len(current_chunk) + len(sentence) <= max_chunk_size:
-            current_chunk += " " + sentence
-        else:
-            chunks.append(current_chunk)
-            current_chunk = sentence
-    if current_chunk:
-        chunks.append(current_chunk)
-
-    summaries = [summarizer(chunk, max_length=150, min_length=30, do_sample=False)[0]['summary_text'] for chunk in chunks]
-    return ' '.join(summaries)
-
 # Title of the app
-st.title("PDF Summarizer AI")
+st.title("PDF Heading Detection")
 
 # File uploader
 uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
@@ -83,23 +51,7 @@ if uploaded_file is not None:
         # Extract text and headings from the specified range of pages of the PDF
         pdf_text, headings = extract_text_and_headings_from_pdf(doc, start_page, end_page)
 
-        # User options
-        options = st.multiselect(
-            "Choose what you want to do:",
-            ["Extract Headings", "Summarize Text"]
-        )
-
-        if "Extract Headings" in options and pdf_text:
-            # Display extracted headings with page numbers
-            st.subheader("Extracted Headings")
-            for heading, page_num in headings:
-                st.write(f"{heading} (Page {page_num})")
-
-        if "Summarize Text" in options and pdf_text:
-            # Summarize the extracted text
-            summarizer = load_summarizer()
-            summary = summarize_text(pdf_text, summarizer)
-
-            # Display the summary
-            st.subheader("Summary")
-            st.write(summary)
+        # Display extracted headings with page numbers
+        st.subheader("Extracted Headings")
+        for heading, page_num in headings:
+            st.write(f"{heading} (Page {page_num})")
