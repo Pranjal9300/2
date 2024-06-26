@@ -1,0 +1,9 @@
+streamlit
+pyMuPDF
+transformers
+nltk
+layoutparser
+torch
+torchvision
+opencv-python-headless
+pytesseract
